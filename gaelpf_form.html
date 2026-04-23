@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GaelPF — Solicitud de Asesoría</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080808; --card: #111111; --card-sel: #1a0f00; --border: #333;
+    --orange: #f97316; --red: #dc2626; --white: #e8e8e8; --gray: #666;
+    --error: #ef4444; --success: #22c55e;
+    --grad: linear-gradient(90deg, #f97316, #dc2626);
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--white); font-family: 'Barlow', sans-serif; font-weight: 400; min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+  ::-webkit-scrollbar { width: 6px; background: #000; }
+  ::-webkit-scrollbar-thumb { background: var(--orange); }
+  .wrap { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 0 24px 60px; }
+
+  /* PROGRESS BAR */
+  .progress-bar-track { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: #1a1a1a; z-index: 100; }
+  .progress-bar-fill { height: 100%; background: var(--grad); box-shadow: 0 0 12px #f9731680; transition: width 0.4s ease; width: 0%; }
+
+  /* SCREENS */
+  .screen { display: none; opacity: 0; transform: translateX(40px); transition: opacity 0.3s ease, transform 0.3s ease; padding-top: 28px; }
+  .screen.active { display: block; }
+  .screen.visible { opacity: 1; transform: translateX(0); }
+  .screen.exit-left { opacity: 0; transform: translateX(-40px); }
+
+  /* HEADER */
+  .site-header { text-align: center; padding: 48px 0 28px; }
+  .site-header .brand { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem,10vw,5rem); background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 0.08em; line-height: 1; }
+  .brand-icon { -webkit-text-fill-color: initial !important; }
+
+  /* FOTOS */
+  .foto-hero { width: 100%; max-width: 400px; aspect-ratio: 4/5; margin: 0 auto 28px; display: block; object-fit: cover; object-position: center top; filter: brightness(0.85) contrast(1.1); border-left: 4px solid var(--orange); box-shadow: 0 8px 40px #00000099; }
+  .foto-hero-fallback { width: 100%; max-width: 400px; aspect-ratio: 4/5; margin: 0 auto 28px; display: flex; align-items: center; justify-content: center; background: var(--card); border-left: 4px solid var(--orange); box-shadow: 0 8px 40px #00000099; }
+  .foto-hero-fallback span { font-family: 'Bebas Neue', sans-serif; font-size: 5rem; letter-spacing: 0.08em; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .foto-banner-wrap { position: relative; margin-bottom: 28px; overflow: hidden; }
+  .foto-banner-wrap img { width: 100%; aspect-ratio: 16/7; object-fit: cover; object-position: center; filter: brightness(0.55) contrast(1.15) saturate(0.6); display: block; }
+  .foto-banner-wrap .banner-label { position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 16px; background: linear-gradient(transparent,#080808cc); font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; letter-spacing: 0.12em; color: var(--orange); }
+
+  /* STEP INDICATOR */
+  .step-indicator { font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; letter-spacing: 0.12em; color: var(--orange); margin-bottom: 8px; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--grad); margin: 20px 0 32px; opacity: 0.6; }
+
+  /* TITLES */
+  h1.main-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.4rem,8vw,3.8rem); letter-spacing: 0.08em; color: var(--white); line-height: 1.05; margin-bottom: 16px; }
+  h2.step-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.8rem,6vw,2.6rem); letter-spacing: 0.08em; color: var(--white); margin-bottom: 4px; }
+  .subtitle { font-size: 0.95rem; color: #999; line-height: 1.6; margin-bottom: 32px; }
+
+  /* FIELDS */
+  .field { margin-bottom: 2rem; position: relative; }
+  .field label.field-label { display: block; font-family: 'Bebas Neue', sans-serif; font-size: 0.95rem; letter-spacing: 0.08em; color: var(--white); margin-bottom: 4px; }
+  .field .subtext { font-size: 0.78rem; color: var(--gray); margin-bottom: 8px; line-height: 1.4; }
+  .field input[type="text"], .field input[type="email"], .field input[type="number"], .field input[type="tel"], .field textarea {
+    width: 100%; background: var(--card); border: none; border-bottom: 1px solid var(--border);
+    color: var(--white); font-family: 'Barlow', sans-serif; font-size: 1rem; font-weight: 400;
+    padding: 10px 0 8px; outline: none; transition: border-color 0.2s; border-radius: 0; -webkit-appearance: none;
+  }
+  .field textarea { resize: vertical; min-height: 80px; padding: 10px 4px 8px; border-bottom: 1px solid var(--border); }
+  .field input::placeholder, .field textarea::placeholder { color: #444; }
+  .field input:focus, .field textarea:focus { border-bottom: 2px solid var(--orange); }
+  .field input.valid, .field textarea.valid { border-bottom: 1px solid var(--success); }
+  .field input.invalid, .field textarea.invalid { border-bottom: 1px solid var(--error); }
+
+  /* SUFFIX */
+  .input-suffix-wrap { position: relative; }
+  .input-suffix-wrap input { padding-right: 36px; }
+  .input-suffix { position: absolute; right: 0; bottom: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; letter-spacing: 0.06em; color: var(--orange); pointer-events: none; }
+
+  /* TEL */
+  .tel-wrap { display: flex; align-items: flex-end; border-bottom: 1px solid var(--border); }
+  .tel-wrap.focused { border-bottom: 2px solid var(--orange); }
+  .tel-wrap.valid   { border-bottom: 1px solid var(--success); }
+  .tel-wrap.invalid { border-bottom: 1px solid var(--error); }
+  .tel-prefix { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.06em; color: var(--orange); padding: 10px 6px 8px 0; white-space: nowrap; flex-shrink: 0; background: var(--card); }
+  .tel-wrap input { flex: 1; border: none !important; border-bottom: none !important; outline: none !important; }
+
+  /* ERROR MSG */
+  .error-msg { display: none; color: var(--error); font-size: 0.78rem; margin-top: 5px; }
+  .error-msg.show { display: block; }
+
+  /* OPTION CARDS */
+  .option-group { display: flex; flex-direction: column; gap: 8px; }
+  .option-card { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid #1e1e1e; border-left: 4px solid transparent; padding: 12px 14px; cursor: pointer; transition: background 0.15s, border-left-color 0.15s; user-select: none; }
+  .option-card:hover { background: #161616; }
+  .option-card.selected { background: var(--card-sel); border-left-color: var(--orange); }
+  .option-card input[type="radio"], .option-card input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; border: 2px solid #444; flex-shrink: 0; position: relative; transition: border-color 0.15s, background 0.15s; }
+  .option-card input[type="radio"] { border-radius: 50%; }
+  .option-card input[type="checkbox"] { border-radius: 0; }
+  .option-card.selected input[type="radio"], .option-card.selected input[type="checkbox"] { border-color: var(--orange); background: var(--orange); }
+  .option-card.selected input[type="radio"]::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; background: #000; border-radius: 50%; }
+  .option-card.selected input[type="checkbox"]::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 10px; color: #000; line-height: 1; }
+  .option-label { font-family: 'Barlow', sans-serif; font-size: 0.9rem; font-weight: 500; color: var(--white); }
+
+  /* OTRO FIELD */
+  .otro-field { display: none; margin-top: 4px; padding: 0 14px 12px 42px; background: var(--card-sel); border-left: 4px solid var(--orange); }
+  .otro-field.show { display: block; }
+  .otro-field input { width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; color: var(--white); font-family: 'Barlow', sans-serif; font-size: 0.9rem; padding: 8px 0 6px; outline: none; }
+  .otro-field input:focus { border-bottom: 1px solid var(--orange); }
+  .otro-field input::placeholder { color: #555; }
+
+  /* BUTTONS */
+  .btn { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.1em; border: none; border-radius: 0; cursor: pointer; padding: 14px 28px; transition: opacity 0.15s, transform 0.1s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--grad); color: #000; width: 100%; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: transparent; color: var(--orange); border: 1px solid var(--orange); }
+  .btn-secondary:hover { background: #1a0f0040; }
+  .btn-row { display: flex; gap: 12px; margin-top: 2rem; }
+  .btn-row .btn-secondary { flex: 0 0 auto; }
+  .btn-row .btn-primary { flex: 1; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .spinner { width: 18px; height: 18px; border: 2px solid #00000040; border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .btn.loading .spinner { display: block; }
+  .btn.loading .btn-label { opacity: 0.6; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* NET ERROR */
+  .net-error { display: none; background: #1a0000; border-left: 4px solid var(--error); color: var(--error); font-size: 0.85rem; padding: 10px 14px; margin-top: 12px; }
+  .net-error.show { display: block; }
+
+  /* THANKS */
+  .thanks-wrap { text-align: center; padding: 60px 0 40px; }
+  .check-circle { width: 100px; height: 100px; margin: 0 auto 32px; position: relative; }
+  .check-circle > svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .check-bg { fill: none; stroke: #1e1e1e; stroke-width: 3; }
+  .check-ring { fill: none; stroke: url(#ringGrad); stroke-width: 3; stroke-dasharray: 283; stroke-dashoffset: 283; animation: drawRing 0.7s ease forwards 0.2s; filter: drop-shadow(0 0 8px #f97316aa); }
+  @keyframes drawRing { to { stroke-dashoffset: 0; } }
+  .check-mark { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 44px; height: 44px; }
+  .check-mark svg { width: 100%; height: 100%; }
+  .check-path { fill: none; stroke: var(--white); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 60; stroke-dashoffset: 60; animation: drawCheck 0.4s ease forwards 0.8s; }
+  @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+  .thanks-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3.5rem,12vw,6rem); letter-spacing: 0.08em; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+  .thanks-sub { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.1em; color: var(--white); margin-bottom: 16px; }
+  .thanks-text { font-size: 0.95rem; color: #999; line-height: 1.7; max-width: 480px; margin: 0 auto; }
+
+  .hidden { display: none !important; }
+  @media (max-width: 480px) { .wrap { padding: 0 16px 60px; } .foto-hero, .foto-hero-fallback { max-width: 100%; } }
+</style>
+</head>
+<body>
+
+<div class="progress-bar-track"><div class="progress-bar-fill" id="progressBar"></div></div>
+
+<div class="wrap">
+
+<!-- ═══════════ INICIO ═══════════ -->
+<div class="screen active" id="screen-inicio">
+  <div class="site-header"><div class="brand"><span class="brand-icon">⚡</span> GaelPF</div></div>
+  <img src="fotos/foto_01_portada.jpg" class="foto-hero" alt="GaelPF Entrenador Personal"
+       onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+  <div class="foto-hero-fallback" style="display:none;"><span>GPF</span></div>
+  <h1 class="main-title">SOLICITUD DE<br>ASESORÍA PERSONALIZADA</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Completa este formulario para conocer mejor tu situación y poder diseñar un plan de entrenamiento y nutrición adaptado a ti.</p>
+  <button class="btn btn-primary" onclick="goToStep(1)"><span class="btn-label">¡VAMOS!</span></button>
+</div>
+
+<!-- ═══════════ PASO 1 ═══════════ -->
+<div class="screen" id="screen-1">
+  <div class="step-indicator">PASO 1 DE 3</div>
+  <h2 class="step-title">DATOS PERSONALES</h2>
+  <div class="divider"></div>
+
+  <div class="foto-banner-wrap">
+    <img src="fotos/foto_02_gym.jpg" alt="" onerror="this.parentElement.style.display='none';">
+    <span class="banner-label">DATOS PERSONALES</span>
+  </div>
+
+  <div class="field" id="f-nombre">
+    <label class="field-label" for="nombre">NOMBRE COMPLETO</label>
+    <input type="text" id="nombre" placeholder="Ej: Juan García López" autocomplete="name">
+    <div class="error-msg" id="e-nombre">⚠️ Introduce tu nombre completo (mínimo 2 palabras, solo letras).</div>
+  </div>
+
+  <div class="field" id="f-email">
+    <label class="field-label" for="email">CORREO ELECTRÓNICO</label>
+    <input type="email" id="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+    <div class="error-msg" id="e-email">⚠️ Introduce un correo electrónico válido.</div>
+  </div>
+
+  <div class="field" id="f-edad">
+    <label class="field-label" for="edad">EDAD</label>
+    <input type="number" id="edad" placeholder="25" inputmode="numeric" min="14" max="80">
+    <div class="error-msg" id="e-edad">⚠️ La edad debe ser un número entre 14 y 80 años.</div>
+  </div>
+
+  <div class="field" id="f-altura">
+    <label class="field-label" for="altura">ALTURA</label>
+    <div class="input-suffix-wrap">
+      <input type="number" id="altura" placeholder="175" inputmode="numeric" min="100" max="250">
+      <span class="input-suffix">cm</span>
+    </div>
+    <div class="error-msg" id="e-altura">⚠️ Introduce una altura entre 100 y 250 cm.</div>
+  </div>
+
+  <div class="field" id="f-peso">
+    <label class="field-label" for="peso">PESO ACTUAL</label>
+    <div class="input-suffix-wrap">
+      <input type="number" id="peso" placeholder="75" inputmode="numeric" min="30" max="300">
+      <span class="input-suffix">kg</span>
+    </div>
+    <div class="error-msg" id="e-peso">⚠️ Introduce un peso entre 30 y 300 kg.</div>
+  </div>
+
+  <div class="field" id="f-ocupacion">
+    <label class="field-label">A QUÉ TE DEDICAS ACTUALMENTE</label>
+    <div class="subtext">Selecciona la opción que mejor te describe</div>
+    <div class="option-group" id="ocupacion-group">
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','Estudiante (ESO / Bachillerato / FP)')">
+        <input type="radio" name="ocupacion" value="Estudiante (ESO / Bachillerato / FP)">
+        <span class="option-label">Estudiante (ESO / Bachillerato / FP)</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','Estudiante universitario')">
+        <input type="radio" name="ocupacion" value="Estudiante universitario">
+        <span class="option-label">Estudiante universitario</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','Trabajo de oficina / administrativo')">
+        <input type="radio" name="ocupacion" value="Trabajo de oficina / administrativo">
+        <span class="option-label">Trabajo de oficina / administrativo</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','Trabajo físico / manual')">
+        <input type="radio" name="ocupacion" value="Trabajo físico / manual">
+        <span class="option-label">Trabajo físico / manual</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','Autónomo / freelance')">
+        <input type="radio" name="ocupacion" value="Autónomo / freelance">
+        <span class="option-label">Autónomo / freelance</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','Hostelería / comercio / atención al público')">
+        <input type="radio" name="ocupacion" value="Hostelería / comercio / atención al público">
+        <span class="option-label">Hostelería / comercio / atención al público</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','Sanitario / docente / funcionario')">
+        <input type="radio" name="ocupacion" value="Sanitario / docente / funcionario">
+        <span class="option-label">Sanitario / docente / funcionario</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','Deportista / atleta')">
+        <input type="radio" name="ocupacion" value="Deportista / atleta">
+        <span class="option-label">Deportista / atleta</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','Amo/a de casa')">
+        <input type="radio" name="ocupacion" value="Amo/a de casa">
+        <span class="option-label">Amo/a de casa</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','En búsqueda de empleo')">
+        <input type="radio" name="ocupacion" value="En búsqueda de empleo">
+        <span class="option-label">En búsqueda de empleo</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'ocupacion','__otro__')">
+        <input type="radio" name="ocupacion" value="__otro__">
+        <span class="option-label">Otro</span>
+      </label>
+    </div>
+    <div class="otro-field" id="otro-ocupacion">
+      <input type="text" id="ocupacion-otro-text" placeholder="Describe tu situación...">
+    </div>
+    <div class="error-msg" id="e-ocupacion">⚠️ Indica a qué te dedicas.</div>
+  </div>
+
+  <div class="field" id="f-objetivo">
+    <label class="field-label">OBJETIVO PRINCIPAL CON EL ENTRENAMIENTO</label>
+    <div class="subtext">Esto me ayuda a enfocar mejor tu planificación</div>
+    <div class="option-group" id="objetivo-group">
+      <label class="option-card" onclick="selectRadio(this,'objetivo','Perder grasa')">
+        <input type="radio" name="objetivo" value="Perder grasa">
+        <span class="option-label">Perder grasa</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'objetivo','Ganar masa muscular')">
+        <input type="radio" name="objetivo" value="Ganar masa muscular">
+        <span class="option-label">Ganar masa muscular</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'objetivo','Recomposición corporal (perder grasa y ganar músculo)')">
+        <input type="radio" name="objetivo" value="Recomposición corporal (perder grasa y ganar músculo)">
+        <span class="option-label">Recomposición corporal (perder grasa y ganar músculo)</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'objetivo','Mejorar rendimiento físico')">
+        <input type="radio" name="objetivo" value="Mejorar rendimiento físico">
+        <span class="option-label">Mejorar rendimiento físico</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'objetivo','__otro__')">
+        <input type="radio" name="objetivo" value="__otro__">
+        <span class="option-label">Otro</span>
+      </label>
+    </div>
+    <div class="otro-field" id="otro-objetivo">
+      <input type="text" id="objetivo-otro-text" placeholder="Describe tu objetivo...">
+    </div>
+    <div class="error-msg" id="e-objetivo">⚠️ Selecciona tu objetivo principal.</div>
+  </div>
+
+  <div class="field" id="f-actividad">
+    <label class="field-label">NIVEL DE ACTIVIDAD DIARIA</label>
+    <div class="subtext">No tengas en cuenta el tiempo de entreno; marca tu actividad diaria normal</div>
+    <div class="option-group" id="actividad-group">
+      <label class="option-card" onclick="selectRadio(this,'actividad','Sedentario (la mayor parte del día sentado)')">
+        <input type="radio" name="actividad" value="Sedentario (la mayor parte del día sentado)">
+        <span class="option-label">Sedentario (la mayor parte del día sentado o con poca actividad)</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'actividad','Moderadamente activo (me muevo algo durante el día)')">
+        <input type="radio" name="actividad" value="Moderadamente activo (me muevo algo durante el día)">
+        <span class="option-label">Moderadamente activo (me muevo algo durante el día)</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'actividad','Activo (camino bastante o tengo un trabajo físico)')">
+        <input type="radio" name="actividad" value="Activo (camino bastante o tengo un trabajo físico)">
+        <span class="option-label">Activo (camino bastante o tengo un trabajo físico)</span>
+      </label>
+      <label class="option-card" onclick="selectRadio(this,'actividad','Muy activo (trabajo físico intenso o entreno mucho)')">
+        <input type="radio" name="actividad" value="Muy activo (trabajo físico intenso o entreno mucho)">
+        <span class="option-label">Muy activo (trabajo físico intenso o entreno mucho)</span>
+      </label>
+    </div>
+    <div class="error-msg" id="e-actividad">⚠️ Selecciona tu nivel de actividad diaria.</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="validateAndNext(1)"><span class="btn-label">SIGUIENTE →</span></button>
+  </div>
+</div>
+
+<!-- ═══════════ PASO 2 ═══════════ -->
+<div class="screen" id="screen-2">
+  <div class="step-indicator">PASO 2 DE 3</div>
+  <h2 class="step-title">ENTRENAMIENTO</h2>
+  <div class="divider"></div>
+
+  <div class="foto-banner-wrap">
+    <img src="fotos/foto_03_entrenamiento.jpg" alt="" onerror="this.parentElement.style.display='none';">
+    <span class="banner-label">ENTRENAMIENTO</span>
+  </div>
+
+  <div class="field" id="f-dias">
+    <label class="field-label">DISPONIBILIDAD SEMANAL</label>
+    <div class="subtext">Marca los días en que podrías entrenar</div>
+    <div class="option-group" id="dias-group">
+      <label class="option-card" onclick="toggleCheckbox(this)"><input type="checkbox" name="dias" value="Lunes"><span class="option-label">Lunes</span></label>
+      <label class="option-card" onclick="toggleCheckbox(this)"><input type="checkbox" name="dias" value="Martes"><span class="option-label">Martes</span></label>
+      <label class="option-card" onclick="toggleCheckbox(this)"><input type="checkbox" name="dias" value="Miércoles"><span class="option-label">Miércoles</span></label>
+      <label class="option-card" onclick="toggleCheckbox(this)"><input type="checkbox" name="dias" value="Jueves"><span class="option-label">Jueves</span></label>
+      <label class="option-card" onclick="toggleCheckbox(this)"><input type="checkbox" name="dias" value="Viernes"><span class="option-label">Viernes</span></label>
+      <label class="option-card" onclick="toggleCheckbox(this)"><input type="checkbox" name="dias" value="Sábado"><span class="option-label">Sábado</span></label>
+      <label class="option-card" onclick="toggleCheckbox(this)"><input type="checkbox" name="dias" value="Domingo"><span class="option-label">Domingo</span></label>
+    </div>
+    <div class="error-msg" id="e-dias">⚠️ Selecciona al menos un día disponible.</div>
+  </div>
+
+  <div class="field" id="f-entrena">
+    <label class="field-label">¿HAS ENTRENADO DURANTE EL ÚLTIMO MES?</label>
+    <div class="option-group" id="entrena-group">
+      <label class="option-card" onclick="selectRadio(this,'entrena','Sí, entreno regularmente')"><input type="radio" name="entrena" value="Sí, entreno regularmente"><span class="option-label">Sí, entreno regularmente</span></label>
+      <label class="option-card" onclick="selectRadio(this,'entrena','Solo de forma esporádica')"><input type="radio" name="entrena" value="Solo de forma esporádica"><span class="option-label">Solo de forma esporádica</span></label>
+      <label class="option-card" onclick="selectRadio(this,'entrena','No, actualmente no entreno')"><input type="radio" name="entrena" value="No, actualmente no entreno"><span class="option-label">No, actualmente no entreno</span></label>
+    </div>
+    <div class="error-msg" id="e-entrena">⚠️ Indica si has entrenado el último mes.</div>
+  </div>
+
+  <div class="field" id="f-lugar">
+    <label class="field-label">¿DÓNDE ENTRENAS O PLANEAS ENTRENAR?</label>
+    <div class="option-group" id="lugar-group">
+      <label class="option-card" onclick="selectRadio(this,'lugar','Gimnasio completo')"><input type="radio" name="lugar" value="Gimnasio completo"><span class="option-label">Gimnasio completo</span></label>
+      <label class="option-card" onclick="selectRadio(this,'lugar','Gimnasio pequeño / de barrio')"><input type="radio" name="lugar" value="Gimnasio pequeño / de barrio"><span class="option-label">Gimnasio pequeño / de barrio</span></label>
+      <label class="option-card" onclick="selectRadio(this,'lugar','En casa')"><input type="radio" name="lugar" value="En casa"><span class="option-label">En casa</span></label>
+      <label class="option-card" onclick="selectRadio(this,'lugar','Parque o zona de calistenia')"><input type="radio" name="lugar" value="Parque o zona de calistenia"><span class="option-label">Parque o zona de calistenia</span></label>
+      <label class="option-card" onclick="selectRadio(this,'lugar','Combino varios lugares')"><input type="radio" name="lugar" value="Combino varios lugares"><span class="option-label">Combino varios lugares</span></label>
+    </div>
+    <div class="error-msg" id="e-lugar">⚠️ Indica dónde planeas entrenar.</div>
+  </div>
+
+  <div class="field hidden" id="f-material">
+    <label class="field-label" for="material">MATERIAL DISPONIBLE EN CASA</label>
+    <textarea id="material" placeholder="Ejemplo: mancuernas, bandas elásticas..."></textarea>
+  </div>
+
+  <div class="field" id="f-lesiones">
+    <label class="field-label" for="lesiones">LESIONES O LIMITACIONES FÍSICAS</label>
+    <div class="subtext">Opcional — déjalo en blanco si no tienes ninguna</div>
+    <textarea id="lesiones" placeholder="Ejemplo: dolor de rodilla, molestias de hombro, problema lumbar..."></textarea>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goToStep(1)">← ATRÁS</button>
+    <button class="btn btn-primary" onclick="validateAndNext(2)"><span class="btn-label">SIGUIENTE →</span></button>
+  </div>
+</div>
+
+<!-- ═══════════ PASO 3 ═══════════ -->
+<div class="screen" id="screen-3">
+  <div class="step-indicator">PASO 3 DE 3</div>
+  <h2 class="step-title">NUTRICIÓN Y CONTACTO</h2>
+  <div class="divider"></div>
+
+  <div class="foto-banner-wrap">
+    <img src="fotos/foto_04_nutricion.jpg" alt="" onerror="this.parentElement.style.display='none';">
+    <span class="banner-label">NUTRICIÓN</span>
+  </div>
+
+  <div class="field" id="f-alimentacion">
+    <label class="field-label">ALIMENTACIÓN ACTUAL</label>
+    <div class="option-group" id="alimentacion-group">
+      <label class="option-card" onclick="selectRadio(this,'alimentacion','Muy descontrolada (como lo que sea)')"><input type="radio" name="alimentacion" value="Muy descontrolada (como lo que sea)"><span class="option-label">Muy descontrolada (como lo que sea)</span></label>
+      <label class="option-card" onclick="selectRadio(this,'alimentacion','Normal (intento comer bien, pero sin dieta)')"><input type="radio" name="alimentacion" value="Normal (intento comer bien, pero sin dieta)"><span class="option-label">Normal (intento comer bien, pero sin seguir una dieta)</span></label>
+      <label class="option-card" onclick="selectRadio(this,'alimentacion','Bastante cuidada (suelo elegir alimentos saludables)')"><input type="radio" name="alimentacion" value="Bastante cuidada (suelo elegir alimentos saludables)"><span class="option-label">Bastante cuidada (suelo elegir alimentos saludables)</span></label>
+      <label class="option-card" onclick="selectRadio(this,'alimentacion','Sigo una dieta estructurada')"><input type="radio" name="alimentacion" value="Sigo una dieta estructurada"><span class="option-label">Sigo una dieta estructurada</span></label>
+    </div>
+    <div class="error-msg" id="e-alimentacion">⚠️ Indica cómo es tu alimentación actual.</div>
+  </div>
+
+  <div class="field" id="f-suplementacion">
+    <label class="field-label">¿USAS SUPLEMENTACIÓN O TIENES INTENCIÓN?</label>
+    <div class="option-group" id="suplementacion-group">
+      <label class="option-card" onclick="selectRadio(this,'suplementacion','si')"><input type="radio" name="suplementacion" value="si"><span class="option-label">Sí</span></label>
+      <label class="option-card" onclick="selectRadio(this,'suplementacion','no')"><input type="radio" name="suplementacion" value="no"><span class="option-label">No</span></label>
+    </div>
+    <div class="error-msg" id="e-suplementacion">⚠️ Indica si usas o planeas usar suplementación.</div>
+  </div>
+
+  <div class="field hidden" id="f-suplementos">
+    <label class="field-label" for="suplementos">QUÉ SUPLEMENTOS USAS O PLANEAS USAR</label>
+    <textarea id="suplementos" placeholder="Ejemplo: proteína en polvo, creatina, multivitamínicos..."></textarea>
+  </div>
+
+  <div class="field" id="f-compromiso">
+    <label class="field-label">COMPROMISO CON EL PLAN 8-12 SEMANAS</label>
+    <div class="option-group" id="compromiso-group">
+      <label class="option-card" onclick="selectRadio(this,'compromiso','Sí, estoy comprometido')"><input type="radio" name="compromiso" value="Sí, estoy comprometido"><span class="option-label">Sí, estoy comprometido</span></label>
+      <label class="option-card" onclick="selectRadio(this,'compromiso','No estoy seguro de poder')"><input type="radio" name="compromiso" value="No estoy seguro de poder"><span class="option-label">No estoy seguro de poder</span></label>
+      <label class="option-card" onclick="selectRadio(this,'compromiso','Solo quiero probar')"><input type="radio" name="compromiso" value="Solo quiero probar"><span class="option-label">Solo quiero probar</span></label>
+    </div>
+    <div class="error-msg" id="e-compromiso">⚠️ Indica tu nivel de compromiso.</div>
+  </div>
+
+  <div class="field" id="f-telefono">
+    <label class="field-label" for="telefono">NÚMERO DE TELÉFONO</label>
+    <div class="tel-wrap" id="tel-wrap">
+      <span class="tel-prefix">+34</span>
+      <input type="tel" id="telefono" placeholder="612 345 678" inputmode="numeric" autocomplete="tel">
+    </div>
+    <div class="error-msg" id="e-telefono">⚠️ Introduce un número de teléfono válido (mínimo 9 dígitos).</div>
+  </div>
+
+  <div class="field" id="f-expectativas">
+    <label class="field-label" for="expectativas">¿QUÉ ESPERAS DE MÍ COMO ENTRENADOR?</label>
+    <textarea id="expectativas" placeholder="Ejemplo: quiero un plan adaptado a mi objetivo y seguimiento personalizado" rows="4"></textarea>
+    <div class="error-msg" id="e-expectativas">⚠️ Explícame qué esperas (mínimo 20 caracteres).</div>
+  </div>
+
+  <div class="net-error" id="net-error">⚠️ Error de conexión, comprueba tu internet e inténtalo de nuevo.</div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goToStep(2)">← ATRÁS</button>
+    <button class="btn btn-primary" id="btn-submit" onclick="submitForm()">
+      <span class="btn-label">¡LISTO! ENVIAR SOLICITUD</span>
+      <div class="spinner"></div>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ GRACIAS ═══════════ -->
+<div class="screen" id="screen-gracias">
+  <div class="thanks-wrap">
+    <div class="check-circle">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/>
+          </linearGradient>
+        </defs>
+        <circle class="check-bg" cx="50" cy="50" r="45"/>
+        <circle class="check-ring" cx="50" cy="50" r="45"/>
+      </svg>
+      <div class="check-mark">
+        <svg viewBox="0 0 44 44" fill="none"><path class="check-path" d="M8 22 L18 32 L36 14"/></svg>
+      </div>
+    </div>
+    <div class="thanks-title">¡GRACIAS!</div>
+    <div class="thanks-sub">SOLICITUD RECIBIDA</div>
+    <p class="thanks-text">Revisaré tu solicitud y si tu perfil encaja con la asesoría te contactaré en las próximas 24-48 horas.</p>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── CONFIGURACIÓN ── (editar tras desplegar el script de Google)
+const APPS_SCRIPT_URL  = "APPS_SCRIPT_URL";   // pega aquí la URL del Web App
+const TOKEN_FORMULARIO = "TOKEN_FORMULARIO";  // debe coincidir con TOKEN_FORM en Script Properties
+
+let currentStep = 0;
+const progressMap = { inicio: 0, 1: 33, 2: 66, 3: 100, gracias: 100 };
+
+function setProgress(val) { document.getElementById('progressBar').style.width = val + '%'; }
+
+function showScreen(id) {
+  const current = document.querySelector('.screen.active');
+  const next    = document.getElementById('screen-' + id);
+  if (current && current !== next) {
+    current.classList.add('exit-left');
+    setTimeout(() => { current.classList.remove('active','visible','exit-left'); current.style.display = 'none'; activateScreen(next); }, 250);
+  } else { activateScreen(next); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function activateScreen(el) {
+  el.style.display = 'block'; el.classList.add('active');
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+}
+function goToStep(step) {
+  currentStep = step;
+  setProgress(progressMap[step === 0 ? 'inicio' : step] || 0);
+  showScreen(step === 0 ? 'inicio' : step);
+}
+
+function selectRadio(card, name, value) {
+  const group = card.closest('.option-group');
+  if (!group) return;
+  group.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  const inp = card.querySelector('input[type="radio"]');
+  if (inp) inp.checked = true;
+  if (name === 'lugar')         document.getElementById('f-material').classList.toggle('hidden', value !== 'En casa');
+  if (name === 'suplementacion') document.getElementById('f-suplementos').classList.toggle('hidden', value !== 'si');
+  const otroField = document.getElementById('otro-' + name);
+  if (otroField) {
+    otroField.classList.toggle('show', value === '__otro__');
+    if (value !== '__otro__') { const t = document.getElementById(name + '-otro-text'); if (t) t.value = ''; }
+  }
+  const err = document.getElementById('e-' + name); if (err) err.classList.remove('show');
+}
+
+function toggleCheckbox(card) {
+  const inp = card.querySelector('input[type="checkbox"]'); if (!inp) return;
+  inp.checked = !inp.checked; card.classList.toggle('selected', inp.checked);
+  const err = document.getElementById('e-dias'); if (err) err.classList.remove('show');
+}
+
+function setInputState(id, state) {
+  const el = document.getElementById(id); if (!el) return;
+  el.classList.remove('valid','invalid'); if (state) el.classList.add(state);
+  if (id === 'telefono') { const w = document.getElementById('tel-wrap'); if (w) { w.classList.remove('valid','invalid'); if (state) w.classList.add(state); } }
+}
+function showFieldError(fId, eId, hasError) {
+  const err = document.getElementById(eId); if (err) err.classList.toggle('show', hasError);
+  const f   = document.getElementById(fId);
+  if (f) { const inp = f.querySelector('input:not([type="radio"]):not([type="checkbox"]), textarea'); if (inp) setInputState(inp.id, hasError ? 'invalid' : 'valid'); }
+}
+
+function getRadioValue(name) {
+  const checked = document.querySelector(`input[name="${name}"]:checked`);
+  if (!checked) return '';
+  if (checked.value === '__otro__') { const t = document.getElementById(name + '-otro-text'); return t ? t.value.trim() : ''; }
+  return checked.value;
+}
+
+const validators = {
+  nombre()       { const v = document.getElementById('nombre').value.trim(); const ok = /^[a-záéíóúüñA-ZÁÉÍÓÚÜÑ\s]+$/.test(v) && v.split(/\s+/).filter(Boolean).length >= 2; showFieldError('f-nombre','e-nombre',!ok); return ok; },
+  email()        { const v = document.getElementById('email').value.trim(); const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); showFieldError('f-email','e-email',!ok); return ok; },
+  edad()         { const v = parseInt(document.getElementById('edad').value); const ok = !isNaN(v) && v >= 14 && v <= 80; showFieldError('f-edad','e-edad',!ok); return ok; },
+  altura()       { const v = parseFloat(document.getElementById('altura').value); const ok = !isNaN(v) && v >= 100 && v <= 250; showFieldError('f-altura','e-altura',!ok); return ok; },
+  peso()         { const v = parseFloat(document.getElementById('peso').value); const ok = !isNaN(v) && v >= 30 && v <= 300; showFieldError('f-peso','e-peso',!ok); return ok; },
+  ocupacion()    { const ch = document.querySelector('input[name="ocupacion"]:checked'); const v = getRadioValue('ocupacion'); const ok = ch && v.length >= 2; const e = document.getElementById('e-ocupacion'); if(e) e.classList.toggle('show',!ok); return ok; },
+  objetivo()     { const ch = document.querySelector('input[name="objetivo"]:checked'); const v = getRadioValue('objetivo'); const ok = ch && v.length >= 2; const e = document.getElementById('e-objetivo'); if(e) e.classList.toggle('show',!ok); return ok; },
+  actividad()    { const ok = !!document.querySelector('input[name="actividad"]:checked'); const e = document.getElementById('e-actividad'); if(e) e.classList.toggle('show',!ok); return ok; },
+  dias()         { const ok = document.querySelectorAll('input[name="dias"]:checked').length > 0; const e = document.getElementById('e-dias'); if(e) e.classList.toggle('show',!ok); return ok; },
+  entrena()      { const ok = !!document.querySelector('input[name="entrena"]:checked'); const e = document.getElementById('e-entrena'); if(e) e.classList.toggle('show',!ok); return ok; },
+  lugar()        { const ok = !!document.querySelector('input[name="lugar"]:checked'); const e = document.getElementById('e-lugar'); if(e) e.classList.toggle('show',!ok); return ok; },
+  alimentacion() { const ok = !!document.querySelector('input[name="alimentacion"]:checked'); const e = document.getElementById('e-alimentacion'); if(e) e.classList.toggle('show',!ok); return ok; },
+  suplementacion(){ const ok = !!document.querySelector('input[name="suplementacion"]:checked'); const e = document.getElementById('e-suplementacion'); if(e) e.classList.toggle('show',!ok); return ok; },
+  compromiso()   { const ok = !!document.querySelector('input[name="compromiso"]:checked'); const e = document.getElementById('e-compromiso'); if(e) e.classList.toggle('show',!ok); return ok; },
+  telefono()     { const v = document.getElementById('telefono').value.replace(/[\s\-]/g,''); const ok = /^\d{9,}$/.test(v); showFieldError('f-telefono','e-telefono',!ok); return ok; },
+  expectativas() { const v = document.getElementById('expectativas').value.trim(); const ok = v.length >= 20; showFieldError('f-expectativas','e-expectativas',!ok); return ok; }
+};
+
+const stepFields = {
+  1: ['nombre','email','edad','altura','peso','ocupacion','objetivo','actividad'],
+  2: ['dias','entrena','lugar'],
+  3: ['alimentacion','suplementacion','compromiso','telefono','expectativas']
+};
+
+function validateAndNext(step) {
+  let allValid = true, firstErr = null;
+  stepFields[step].forEach(f => { const ok = validators[f](); if (!ok) { allValid = false; if (!firstErr) firstErr = 'f-' + f; } });
+  if (!allValid) { if (firstErr) { const el = document.getElementById(firstErr); if (el) el.scrollIntoView({ behavior:'smooth', block:'center' }); } return; }
+  goToStep(step + 1);
+}
+
+['nombre','email','edad','altura','peso','telefono','expectativas'].forEach(id => {
+  const el = document.getElementById(id); if (!el) return;
+  el.addEventListener('blur',  () => { if (validators[id]) validators[id](); });
+  el.addEventListener('input', () => { el.classList.remove('valid','invalid'); if (id==='telefono') { const w=document.getElementById('tel-wrap'); if(w) w.classList.remove('valid','invalid'); } });
+});
+const telInput = document.getElementById('telefono');
+const telWrap  = document.getElementById('tel-wrap');
+if (telInput && telWrap) {
+  telInput.addEventListener('focus', () => telWrap.classList.add('focused'));
+  telInput.addEventListener('blur',  () => { telWrap.classList.remove('focused'); validators.telefono(); });
+}
+
+async function submitForm() {
+  let allValid = true, firstErr = null;
+  stepFields[3].forEach(f => { const ok = validators[f](); if (!ok) { allValid = false; if (!firstErr) firstErr = 'f-' + f; } });
+  if (!allValid) { if (firstErr) { const el = document.getElementById(firstErr); if (el) el.scrollIntoView({ behavior:'smooth', block:'center' }); } return; }
+
+  const btn = document.getElementById('btn-submit');
+  btn.classList.add('loading'); btn.disabled = true;
+  document.getElementById('net-error').classList.remove('show');
+
+  const diasSel = Array.from(document.querySelectorAll('input[name="dias"]:checked')).map(i => i.value);
+  const now = new Date();
+  const fecha = now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES');
+
+  const data = {
+    token:                   TOKEN_FORMULARIO,
+    fecha,
+    nombre:                  document.getElementById('nombre').value.trim(),
+    correo:                  document.getElementById('email').value.trim(),
+    telefono:                '+34 ' + document.getElementById('telefono').value.replace(/[\s\-]/g,''),
+    edad:                    document.getElementById('edad').value,
+    altura_cm:               document.getElementById('altura').value,
+    peso_kg:                 document.getElementById('peso').value,
+    ocupacion:               getRadioValue('ocupacion'),
+    objetivo:                getRadioValue('objetivo'),
+    nivel_actividad:         getRadioValue('actividad'),
+    dias_disponibles:        diasSel.join(', '),
+    ha_entrenado_ultimo_mes: getRadioValue('entrena'),
+    lugar_entrenamiento:     getRadioValue('lugar'),
+    material_en_casa:        document.getElementById('f-material').classList.contains('hidden') ? '' : document.getElementById('material').value.trim(),
+    lesiones:                document.getElementById('lesiones').value.trim(),
+    alimentacion:            getRadioValue('alimentacion'),
+    usa_suplementacion:      getRadioValue('suplementacion'),
+    suplementos:             document.getElementById('f-suplementos').classList.contains('hidden') ? '' : document.getElementById('suplementos').value.trim(),
+    compromiso:              getRadioValue('compromiso'),
+    expectativas:            document.getElementById('expectativas').value.trim()
+  };
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    setProgress(100);
+    showScreen('gracias');
+  } catch (err) {
+    document.getElementById('net-error').classList.add('show');
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+}
+
+document.getElementById('screen-inicio').classList.add('visible');
+</script>
+</body>
+</html>

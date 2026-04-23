@@ -1,0 +1,442 @@
+╔══════════════════════════════════════════════════════════════════╗
+║         MANUAL DE INSTALACIÓN — GAELPF FORMULARIO v2            ║
+║         (con deduplicación, límite de correos y token)          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ESTRUCTURA DE LA CARPETA DEL PROYECTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GaelPF\
+ ├── gaelpf_form.html        ← el formulario (abre esto en el navegador)
+ ├── MANUAL_GAELPF.txt       ← este archivo
+ └── fotos\
+      ├── foto_01_portada.jpg
+      ├── foto_02_gym.jpg
+      ├── foto_03_entrenamiento.jpg
+      └── foto_04_nutricion.jpg
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FOTOS — QUÉ FOTO VA EN CADA HUECO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Nombre exacto del archivo  │ Dónde aparece            │ Qué debe mostrar
+───────────────────────────┼──────────────────────────┼──────────────────────────────────────
+foto_01_portada.jpg        │ Pantalla de INICIO        │ Tu foto como entrenador. Retrato
+                           │ (protagonista, grande)    │ oscuro, fondo neutro o gym. Encuadre
+                           │                           │ de cintura para arriba o cuerpo entero.
+                           │                           │ Proporción ideal: 4:5 (ej. 800×1000px)
+───────────────────────────┼──────────────────────────┼──────────────────────────────────────
+foto_02_gym.jpg            │ Paso 1 — Datos personales │ Ambiente de gym: barras, pesas,
+                           │ (banner decorativo)       │ máquinas, suelo de goma. Oscura.
+                           │                           │ Proporción ideal: 16:7 (ej. 1280×560px)
+───────────────────────────┼──────────────────────────┼──────────────────────────────────────
+foto_03_entrenamiento.jpg  │ Paso 2 — Entrenamiento    │ Acción: alguien entrenando, en
+                           │ (banner decorativo)       │ posición atlética. Tonos oscuros.
+                           │                           │ Proporción ideal: 16:7
+───────────────────────────┼──────────────────────────┼──────────────────────────────────────
+foto_04_nutricion.jpg      │ Paso 3 — Nutrición        │ Comida saludable, tupper, meal prep.
+                           │ (banner decorativo)       │ Evitar fondos blancos.
+                           │                           │ Proporción ideal: 16:7
+
+IMPORTANTE:
+- Los nombres de archivo deben ser EXACTAMENTE los de la tabla (minúsculas,
+  sin tildes, con guión bajo).
+- Si una foto no está, ese hueco desaparece solo; el formulario sigue
+  funcionando sin ningún problema.
+- Formato recomendado: JPG, entre 100–400 KB por foto.
+- Para reducir el peso: https://squoosh.app (gratis, sin instalar nada).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CÓMO FUNCIONA EL CONTROL DE ENVÍOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+El script tiene dos capas de protección:
+
+1. DEDUPLICACIÓN (mismo correo o mismo teléfono)
+   - Si alguien ya envió el formulario, sus datos NO se guardan de nuevo
+     en la hoja "Solicitudes".
+   - Sí te llega un correo avisándote de que es un reenvío (con el número
+     de intento y un aviso visual en el asunto).
+
+2. LÍMITE DE CORREOS (más de 5 intentos)
+   - A partir del 6.º intento del mismo contacto, el script deja de
+     enviarte correos de ese contacto completamente.
+   - En la hoja "Control" podrás ver la columna "Bloqueado" marcada como SÍ.
+
+3. DÓNDE VER EL CONTADOR
+   En tu Google Sheet habrá DOS pestañas:
+
+   ┌──────────────┬───────────────────────────────────────────────┐
+   │ Solicitudes  │ Datos reales. Solo el primer envío por         │
+   │              │ contacto. Las columnas son los campos del      │
+   │              │ formulario.                                    │
+   ├──────────────┼───────────────────────────────────────────────┤
+   │ Control      │ Registro de todos los intentos. Columnas:     │
+   │              │  • Correo                                     │
+   │              │  • Teléfono                                   │
+   │              │  • Primer envío (fecha)                       │
+   │              │  • Último intento (fecha)                     │
+   │              │  • Intentos totales  ← EL CONTADOR            │
+   │              │  • Datos guardados (Sí / no)                  │
+   │              │  • Bloqueado >5 intentos (SÍ / no)            │
+   └──────────────┴───────────────────────────────────────────────┘
+
+   Para DESBLOQUEAR un contacto o resetear su contador:
+   → Ve a la pestaña "Control" → busca su fila → edita la columna
+     "Intentos totales" (ponla a 0 o 1) y "Bloqueado" (ponla a "no").
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASO 1 — CREAR LA GOOGLE SHEET Y EL SCRIPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Ve a https://sheets.google.com
+2. Crea una hoja nueva. Nómbrala, por ejemplo: "GaelPF — Solicitudes"
+3. Menú superior → Extensiones → Apps Script
+4. Borra todo el código que haya y PEGA EL BLOQUE DE CÓDIGO que está
+   más abajo en este manual.
+5. Guarda el proyecto (Ctrl+S) y ponle un nombre, ej: "GaelPF Script"
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASO 2 — CONFIGURAR LAS PROPIEDADES DEL SCRIPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+En el editor de Apps Script:
+→ Menú "Proyecto" (engranaje ⚙️) → "Configuración del proyecto"
+→ Sección "Propiedades del script" → "Añadir propiedad"
+
+Añade estas DOS propiedades:
+
+  Clave              │ Valor
+  ───────────────────┼──────────────────────────────────────
+  EMAIL_DESTINO      │ jkaphammel@gmail.com
+  TOKEN_FORM         │ (elige una cadena secreta, ej: gaelpf2024xK9)
+
+Haz clic en "Guardar propiedades del script".
+
+IMPORTANTE SOBRE EL TOKEN:
+El TOKEN_FORM es una contraseña simple que el formulario HTML envía junto
+con los datos. El script la comprueba y rechaza cualquier petición que no
+la lleve. Esto impide que alguien llene tu hoja enviando datos al azar sin
+haber pasado por tu formulario.
+Puedes usar cualquier combinación de letras y números. Cuanto más larga,
+mejor. Solo tú la conoces (está en Script Properties, no en el código).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASO 3 — DESPLEGAR EL SCRIPT COMO WEB APP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Haz clic en el botón azul "Implementar" → "Nueva implementación"
+2. Tipo: "Aplicación web"
+3. Rellena así:
+   - Ejecutar como:       Yo (jkaphammel@gmail.com)
+   - Quién tiene acceso:  Cualquier persona
+4. Haz clic en "Implementar"
+5. Autoriza los permisos:
+   → "Autorizar acceso" → elige tu cuenta
+   → Si aparece "app no verificada": "Configuración avanzada"
+     → "Ir a GaelPF Script (no seguro)" → Permitir
+6. Copia la URL que aparece. Tiene esta forma:
+   https://script.google.com/macros/s/AKfycb.../exec
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PASO 4 — CONECTAR TODO AL FORMULARIO HTML
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abre gaelpf_form.html con el Bloc de notas
+   (clic derecho → Abrir con → Bloc de notas)
+
+2. Busca estas dos líneas al final del archivo (dentro de <script>):
+
+   const APPS_SCRIPT_URL  = "APPS_SCRIPT_URL";
+   const TOKEN_FORMULARIO = "TOKEN_FORMULARIO";
+
+3. Sustituye los valores dentro de las comillas:
+
+   const APPS_SCRIPT_URL  = "https://script.google.com/macros/s/TU_ID/exec";
+   const TOKEN_FORMULARIO = "gaelpf2024xK9";  ← el mismo que pusiste en Script Properties
+
+4. Guarda el archivo.
+5. Abre gaelpf_form.html haciendo doble clic. Ya está listo.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CAMBIAR EL CORREO DE DESTINO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Ve a script.google.com → abre "GaelPF Script"
+2. Menú Proyecto (⚙️) → Configuración del proyecto → Propiedades del script
+3. Edita EMAIL_DESTINO → pon el nuevo correo → Guardar
+4. Vuelve a desplegar:
+   Implementar → Gestionar implementaciones → lápiz (editar) →
+   Versión: "Nueva versión" → Implementar
+   ✓ La URL NO cambia. No hay que tocar el HTML.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ACTUALIZAR EL SCRIPT TRAS CUALQUIER CAMBIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Cada vez que cambies el código o las propiedades:
+  Implementar → Gestionar implementaciones → lápiz →
+  Versión: "Nueva versión" → Implementar
+
+Si no cambias la versión, los cambios NO se aplican.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CÓDIGO DEL APPS SCRIPT — COPIAR Y PEGAR COMPLETO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▼▼▼ DESDE AQUÍ ▼▼▼
+
+// ══════════════════════════════════════════════════════
+// GaelPF — Apps Script v2
+// Deduplicación + límite de correos + validación + token
+// ══════════════════════════════════════════════════════
+
+// Configuración en Script Properties (no editar aquí):
+//   EMAIL_DESTINO  →  tu correo
+//   TOKEN_FORM     →  cadena secreta que también va en el HTML
+
+const PROPS         = PropertiesService.getScriptProperties();
+const EMAIL_DESTINO = PROPS.getProperty('EMAIL_DESTINO') || 'jkaphammel@gmail.com';
+const TOKEN_FORM    = PROPS.getProperty('TOKEN_FORM')    || '';
+
+const HOJA_DATOS    = 'Solicitudes';
+const HOJA_CONTROL  = 'Control';
+const MAX_EMAILS    = 5;   // a partir del intento 6 no se envían más correos
+
+// ── ENTRADA PRINCIPAL ──────────────────────────────────
+function doPost(e) {
+  function ok(msg)      { return resp(200, true,  msg); }
+  function err(c, msg)  { return resp(c,   false, msg); }
+
+  try {
+    if (!e || !e.postData || !e.postData.contents) return err(400, 'Sin datos');
+
+    let d;
+    try { d = JSON.parse(e.postData.contents); }
+    catch(_) { return err(400, 'JSON inválido'); }
+
+    // Validar token
+    if (TOKEN_FORM && d.token !== TOKEN_FORM) return err(403, 'Acceso denegado');
+
+    // Validar campos mínimos
+    if (!validarCampos(d)) return err(400, 'Campos incompletos');
+
+    // Comprobar duplicados y actualizar contador
+    const info = actualizarControl(d.correo, d.telefono);
+    // info = { esDuplicado, intentos, bloqueado }
+
+    // Enviar correo (si no está bloqueado)
+    if (!info.bloqueado) enviarEmail(d, info.esDuplicado, info.intentos);
+
+    // Guardar en hoja solo si es el primer envío
+    if (!info.esDuplicado) guardarEnSheet(d);
+
+    return ok('ok');
+
+  } catch (ex) {
+    console.error('doPost error:', ex.toString());
+    return err(500, 'Error interno');
+  }
+}
+
+// ── VALIDACIÓN DE CAMPOS ───────────────────────────────
+function validarCampos(d) {
+  if (!d || typeof d !== 'object') return false;
+
+  const requeridos = [
+    'nombre', 'correo', 'telefono', 'edad', 'altura_cm', 'peso_kg',
+    'ocupacion', 'objetivo', 'nivel_actividad', 'dias_disponibles',
+    'ha_entrenado_ultimo_mes', 'lugar_entrenamiento', 'alimentacion',
+    'usa_suplementacion', 'compromiso', 'expectativas', 'fecha'
+  ];
+
+  for (const k of requeridos) {
+    if (!d[k] || String(d[k]).trim().length === 0) return false;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.correo)) return false;
+  if (!/\d{9,}/.test(String(d.telefono).replace(/\s/g, ''))) return false;
+
+  for (const k of ['nombre', 'expectativas', 'ocupacion', 'objetivo']) {
+    if (String(d[k]).length > 2000) return false;
+  }
+
+  return true;
+}
+
+// ── CONTROL DE DUPLICADOS Y LÍMITE DE CORREOS ─────────
+function actualizarControl(correo, telefono) {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  let hoja    = ss.getSheetByName(HOJA_CONTROL);
+
+  if (!hoja) {
+    hoja = ss.insertSheet(HOJA_CONTROL);
+    const cab = [
+      'Correo', 'Teléfono', 'Primer envío', 'Último intento',
+      'Intentos totales', 'Datos guardados', 'Bloqueado (>5 intentos)'
+    ];
+    hoja.appendRow(cab);
+    hoja.getRange(1, 1, 1, cab.length)
+        .setFontWeight('bold')
+        .setBackground('#1a1a1a')
+        .setFontColor('#f97316');
+  }
+
+  const datos   = hoja.getDataRange().getValues();
+  const correoN = correo.toLowerCase().trim();
+  const telN    = String(telefono).replace(/\D/g, '');
+  const ahora   = new Date().toLocaleString('es-ES');
+
+  // Buscar coincidencia por correo O por teléfono
+  for (let i = 1; i < datos.length; i++) {
+    const filaCorreo = String(datos[i][0]).toLowerCase().trim();
+    const filaTel    = String(datos[i][1]).replace(/\D/g, '');
+
+    if (filaCorreo === correoN || filaTel === telN) {
+      const intentos  = Number(datos[i][4]) + 1;
+      const bloqueado = intentos > MAX_EMAILS;
+
+      hoja.getRange(i + 1, 4).setValue(ahora);      // Último intento
+      hoja.getRange(i + 1, 5).setValue(intentos);   // Contador
+      hoja.getRange(i + 1, 7).setValue(bloqueado ? 'SÍ' : 'no');
+
+      // Colorear en rojo si bloqueado
+      if (bloqueado) {
+        hoja.getRange(i + 1, 7).setBackground('#3a0000').setFontColor('#ef4444');
+      }
+
+      return { esDuplicado: true, intentos, bloqueado };
+    }
+  }
+
+  // Primera vez — crear fila nueva
+  hoja.appendRow([correo, telefono, ahora, ahora, 1, 'SÍ', 'no']);
+  return { esDuplicado: false, intentos: 1, bloqueado: false };
+}
+
+// ── GUARDAR EN HOJA PRINCIPAL ──────────────────────────
+function guardarEnSheet(d) {
+  const ss   = SpreadsheetApp.getActiveSpreadsheet();
+  let hoja   = ss.getSheetByName(HOJA_DATOS);
+
+  if (!hoja) {
+    hoja = ss.insertSheet(HOJA_DATOS);
+    const cab = [
+      'Fecha', 'Nombre', 'Correo', 'Teléfono', 'Edad', 'Altura (cm)', 'Peso (kg)',
+      'Ocupación', 'Objetivo', 'Nivel actividad', 'Días disponibles',
+      'Ha entrenado último mes', 'Lugar entrenamiento', 'Material en casa',
+      'Lesiones', 'Alimentación', 'Usa suplementación', 'Suplementos',
+      'Compromiso', 'Expectativas'
+    ];
+    hoja.appendRow(cab);
+    hoja.getRange(1, 1, 1, cab.length).setFontWeight('bold');
+  }
+
+  hoja.appendRow([
+    d.fecha,           d.nombre,          d.correo,         d.telefono,
+    d.edad,            d.altura_cm,       d.peso_kg,        d.ocupacion,
+    d.objetivo,        d.nivel_actividad, d.dias_disponibles,
+    d.ha_entrenado_ultimo_mes, d.lugar_entrenamiento,
+    d.material_en_casa  || '',
+    d.lesiones          || '',
+    d.alimentacion,    d.usa_suplementacion,
+    d.suplementos       || '',
+    d.compromiso,      d.expectativas
+  ]);
+}
+
+// ── ENVÍO DE CORREO ────────────────────────────────────
+function enviarEmail(d, esDuplicado, intentos) {
+  const etiqueta = esDuplicado ? '[REENVÍO #' + intentos + ']' : '[NUEVA SOLICITUD]';
+  const asunto   = '⚡ ' + etiqueta + ' Asesoría — ' + d.nombre;
+
+  let aviso = '';
+  if (esDuplicado) {
+    aviso =
+      '⚠️  SOLICITUD DUPLICADA\n' +
+      'Este contacto ya tiene datos guardados en la hoja.\n' +
+      'Intento nº ' + intentos + ' de ' + MAX_EMAILS + ' máximos.\n' +
+      'Los datos NO se han vuelto a guardar en "Solicitudes".\n' +
+      (intentos >= MAX_EMAILS
+        ? '🔴 LÍMITE ALCANZADO: este es el último correo de este contacto.\n'
+        : '(Seguirás recibiendo aviso hasta el intento ' + MAX_EMAILS + '.)\n'
+      ) +
+      '─────────────────────────────────────────\n\n';
+  }
+
+  const cuerpo =
+    aviso +
+    'Fecha: ' + d.fecha + '   |   Intento nº ' + intentos + '\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━\nDATOS PERSONALES\n━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'Nombre:           ' + d.nombre                   + '\n' +
+    'Correo:           ' + d.correo                   + '\n' +
+    'Teléfono:         ' + d.telefono                 + '\n' +
+    'Edad:             ' + d.edad         + ' años\n' +
+    'Altura:           ' + d.altura_cm    + ' cm\n'   +
+    'Peso:             ' + d.peso_kg      + ' kg\n'   +
+    'Ocupación:        ' + d.ocupacion                + '\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━\nENTRENAMIENTO\n━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'Objetivo:         ' + d.objetivo                 + '\n' +
+    'Actividad diaria: ' + d.nivel_actividad           + '\n' +
+    'Días disponibles: ' + d.dias_disponibles          + '\n' +
+    'Entrena ahora:    ' + d.ha_entrenado_ultimo_mes   + '\n' +
+    'Lugar:            ' + d.lugar_entrenamiento       + '\n' +
+    'Material en casa: ' + (d.material_en_casa || '—') + '\n' +
+    'Lesiones:         ' + (d.lesiones        || '—') + '\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━\nNUTRICIÓN\n━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'Alimentación:     ' + d.alimentacion             + '\n' +
+    'Suplementación:   ' + d.usa_suplementacion        + '\n' +
+    'Suplementos:      ' + (d.suplementos    || '—') + '\n' +
+    'Compromiso:       ' + d.compromiso                + '\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━\nEXPECTATIVAS\n━━━━━━━━━━━━━━━━━━━━━━\n' +
+    d.expectativas;
+
+  MailApp.sendEmail(EMAIL_DESTINO, asunto, cuerpo);
+}
+
+// ── HELPER RESPUESTA ───────────────────────────────────
+function resp(code, ok, msg) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: ok, msg: msg, code: code }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+▲▲▲ HASTA AQUÍ ▲▲▲
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PREGUNTAS FRECUENTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+P: El formulario llega a "¡Gracias!" pero no recibo el email.
+R: Comprueba que pegaste bien la URL en el HTML y que desplegaste con
+   "Nueva versión". Revisa también la carpeta de Spam.
+
+P: En el correo pone "Reenvío" pero el cliente dice que es la primera vez.
+R: Alguien usó el mismo correo o teléfono antes. Mira la hoja "Control"
+   para ver la fecha del primer envío.
+
+P: Quiero que un cliente pueda enviar de nuevo y guardarlo todo.
+R: Ve a la hoja "Control" → busca su fila → borra esa fila entera.
+   La próxima vez se tratará como nueva solicitud.
+
+P: Google dice que la app no está verificada.
+R: Normal para scripts personales. Sigue los pasos del Paso 3 (punto 5).
+
+P: Las fotos no se ven.
+R: Verifica que los archivos están en la carpeta "fotos\" con los nombres
+   exactos de la tabla de más arriba.
+
+P: Quiero publicarlo online.
+R: Sube toda la carpeta GaelPF\ a Netlify (gratis, drag & drop en
+   netlify.com). El script de Google sigue funcionando igual.
