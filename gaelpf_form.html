@@ -493,8 +493,7 @@
 
 <script>
 // ── CONFIGURACIÓN ── (editar tras desplegar el script de Google)
-const APPS_SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbx2qalEj6_H658qvTe0cSXsg2DaXY3HAe6Hno_gaTo382u9Va5tu3pOyZ2B31W1RW-ZGg/exec";
-const TOKEN_FORMULARIO = "GaelPF_2024$kX9mR";  // debe coincidir con TOKEN_FORM en Script Properties
+// URL y token gestionados por Netlify — no tocar
 
 let currentStep = 0;
 const progressMap = { inicio: 0, 1: 33, 2: 66, 3: 100, gracias: 100 };
@@ -619,7 +618,6 @@ async function submitForm() {
   const fecha = now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES');
 
   const data = {
-    token:                   TOKEN_FORMULARIO,
     fecha,
     nombre:                  document.getElementById('nombre').value.trim(),
     correo:                  document.getElementById('email').value.trim(),
@@ -643,13 +641,18 @@ async function submitForm() {
   };
 
   try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST', mode: 'no-cors',
+    const res    = await fetch('/.netlify/functions/submit', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    setProgress(100);
-    showScreen('gracias');
+    const result = await res.json();
+    if (result.ok) {
+      setProgress(100);
+      showScreen('gracias');
+    } else {
+      throw new Error(result.msg || 'Error');
+    }
   } catch (err) {
     document.getElementById('net-error').classList.add('show');
     btn.classList.remove('loading'); btn.disabled = false;
