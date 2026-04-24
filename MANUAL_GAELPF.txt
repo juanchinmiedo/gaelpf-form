@@ -94,7 +94,7 @@ PASO 3 — Configurar propiedades del script
      Propiedad       │ Valor
      ────────────────┼──────────────────────────
      EMAIL_DESTINO   │ jkaphammel@gmail.com
-     TOKEN_FORM      │ GaelPF_2024$kX9mR
+     TOKEN_FORM      │ (el token que elegiste)
 
   Guardar propiedades.
 
@@ -109,7 +109,7 @@ PASO 4 — Desplegar como Web App
   4. Copia la URL generada.
 
   URL actual del script:
-  https://script.google.com/macros/s/AKfycbx2qalEj6_H658qvTe0cSXsg2DaXY3HAe6Hno_gaTo382u9Va5tu3pOyZ2B31W1RW-ZGg/exec
+  (pega aquí tu URL tras desplegar — solo para referencia local, no subir a GitHub)
 
 CAMBIAR EL CORREO DE DESTINO
   Engranaje ⚙️ → Propiedades del script → edita EMAIL_DESTINO → Guardar
@@ -146,8 +146,8 @@ PASO 3 — Añadir variables de entorno
 
   Clave            │ Valor
   ─────────────────┼───────────────────────────────────────────────────────────────────────────────────
-  APPS_SCRIPT_URL  │ https://script.google.com/macros/s/AKfycbx2qalEj6_H658qvTe0cSXsg2DaXY3HAe6Hno_gaTo382u9Va5tu3pOyZ2B31W1RW-ZGg/exec
-  TOKEN_FORM       │ GaelPF_2024$kX9mR
+  APPS_SCRIPT_URL  │ (tu URL de Apps Script)
+  TOKEN_FORM       │ (el token que elegiste)
 
 PASO 4 — Redesplegar
   Deploys → "Trigger deploy" → "Deploy site"
